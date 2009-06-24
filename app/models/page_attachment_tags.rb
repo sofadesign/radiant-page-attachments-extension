@@ -235,6 +235,38 @@ module PageAttachmentTags
     attachment = tag.locals.attachment
     attachment.filename[/\.(\w+)$/, 1]
   end
+  
+  desc %{
+    Renders an image tag for the attachment (assuming it's an image), embraced
+    by a link tag with a @rel="lightbox"@ attribute for lightbox support.
+    By default whe use the @thumb@ size of image and the lightbox one will
+    be a @normal@ one.
+    So you have to add the right settings, with your own sizes, in your 
+    @config/environment.rb@ file: @PAGE_ATTACHMENT_SIZES = {:icon => '50x50>', :thumb => '120x120>', :normal => '640x480>'}@
+    (keep the icon size, it is required for the admin interface)
+    
+    Any other attributes will be added as HTML attributes to the rendered link tag.
+    
+    *Usage*:
+
+    <pre><code><r:attachment:lightboxthumb name="file.jpg"/></code></pre>
+
+    }
+  tag "attachment:lightboxthumb" do |tag|
+    raise TagError, "'name' attribute required" unless name = tag.attr.delete('name') or tag.locals.attachment
+    page = tag.locals.page
+    attachment = tag.locals.attachment || page.attachment(name)
+    raise TagError, "attachment is not an image." unless attachment.content_type.strip =~ /^image\//
+    filename = attachment.public_filename(size) rescue ""
+    attributes = tag.attr
+    attributes['name'] = name
+    attributes['size'] = 'normal'
+    attributes['title'] = CGI.escapeHTML(tag.render("attachment:title", {"name"=>name}))
+    attributes['rel'] = "lightbox"
+    tag.render("attachment:link", attributes) do
+      tag.render("attachment:image", {'name' => name , 'size' => 'thumb', 'alt'=>attributes['title']})
+    end
+  end
 
   private
     def attachments_find_options(tag)
