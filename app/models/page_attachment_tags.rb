@@ -246,13 +246,17 @@ module PageAttachmentTags
     (keep the icon size, it is required for the admin interface)
     
     @rel@ attribute default is "lightbox" but you can set your own if you need it.
-    The link @class@ is set to "lightbox-link" by default but you can change it if you want.
+    The link @class@ is set to "lightbox-link" by default but you can change it 
+    if you want.
+    By default, the @title@ link attribute value is the attachment title. 
+    You can override it with the @title@ option
+    
     
     Any other attributes will be added as HTML attributes to the rendered link tag.
     
     *Usage*:
 
-    <pre><code><r:attachment:lightboxthumb name="file.jpg" [rel="lightbox"] [class="lightbox-link"]/></code></pre>
+    <pre><code><r:attachment:lightboxthumb name="file.jpg" [rel="lightbox"] [class="lightbox-link"] [title="Your title"]/></code></pre>
 
     }
   tag "attachment:lightboxthumb" do |tag|
@@ -262,10 +266,10 @@ module PageAttachmentTags
     raise TagError, "attachment is not an image." unless attachment.content_type.strip =~ /^image\//
     
     attributes = tag.attr
-    attributes['name'] = name
-    attributes['size'] = 'normal'
-    attributes['title'] = CGI.escapeHTML(tag.render("attachment:title", {"name"=>name}))
-    attributes['rel'] ||= "lightbox"
+    attributes['name']    = name
+    attributes['size']    = 'normal'
+    attributes['title'] ||= CGI.escapeHTML(tag.render("attachment:title", {"name"=>name}))
+    attributes['rel']   ||= "lightbox"
     attributes['class'] ||= "lightbox-link"
     tag.render("attachment:link", attributes) do
       tag.render("attachment:image", {'name' => name , 'size' => 'thumb', 'alt'=>attributes['title']})
