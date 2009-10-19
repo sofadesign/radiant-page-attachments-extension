@@ -146,4 +146,9 @@ class PageAttachmentsExtensionTest < Test::Unit::TestCase
   def test_extension_tag
     assert_renders "pngtxt", %{<r:attachment:each><r:extension/></r:attachment:each>}
   end
+  
+  def test_lighbox_tags
+    img = page_attachments(:rails_png)
+    assert_renders %{<a href="#{img.public_filename(:normal)}" rel="lightbox"><img src="#{img.public_filename(:thumb)}" /></a>}, '<r:attachment:lighboxthumb name="rails.png" />', '/'
+  end
 end
