@@ -56,6 +56,7 @@ Usage
 * Display name of the user who added the attachment `<r:attachment:author name="file.jpg"/>`
 * Iterate through all the attachments on a page `<r:attachment:each><r:link/></r:attachment:each>`
 * Display the extension of an attachement inside iterations with <r:attachment:extension/>
+* Display a link with thumb of an attached image with a `rel="lightbox` attribute for lightbox support `<r:attachment:lightboxthumb name="file.jpg" [rel="lightbox"] [class="lightbox-link"] [title="Your title"]/>`
 
 Troubleshooting
 ---
