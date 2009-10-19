@@ -121,7 +121,7 @@ module PageAttachmentTags
     raise TagError, "'name' attribute required" unless name = tag.attr.delete('name') or tag.locals.attachment
     page = tag.locals.page
     attachment = tag.locals.attachment || page.attachment(name)
-    size = tag.attr['size'] || nil
+    size = tag.attr.delete('size') || nil
     raise TagError, "attachment is not an image." unless attachment.content_type.strip =~ /^image\//
     filename = attachment.public_filename(size) rescue ""
     attributes = tag.attr.inject([]){ |a,(k,v)| a << %{#{k}="#{v}"} }.join(" ").strip
@@ -234,6 +234,46 @@ module PageAttachmentTags
     raise TagError, "must be nested inside an attachment or attachment:each tag" unless tag.locals.attachment
     attachment = tag.locals.attachment
     attachment.filename[/\.(\w+)$/, 1]
+  end
+  
+  desc %{
+    Renders an image tag for the attachment (assuming it's an image), embraced
+    by a link tag with a @rel="lightbox"@ attribute for lightbox support.
+    By default whe use the @thumb@ size of image and the lightbox one will
+    be a @normal@ one.
+    So you have to add the right settings, with your own sizes, in your 
+    @config/environment.rb@ file: @PAGE_ATTACHMENT_SIZES = {:icon => '50x50>', :thumb => '120x120>', :normal => '640x480>'}@
+    (keep the icon size, it is required for the admin interface)
+    
+    @rel@ attribute default is "lightbox" but you can set your own if you need it.
+    The link @class@ is set to "lightbox-link" by default but you can change it 
+    if you want.
+    By default, the @title@ link attribute value is the attachment title. 
+    You can override it with the @title@ option
+    
+    
+    Any other attributes will be added as HTML attributes to the rendered link tag.
+    
+    *Usage*:
+
+    <pre><code><r:attachment:lightboxthumb name="file.jpg" [rel="lightbox"] [class="lightbox-link"] [title="Your title"]/></code></pre>
+
+    }
+  tag "attachment:lightboxthumb" do |tag|
+    raise TagError, "'name' attribute required" unless name = tag.attr.delete('name') or tag.locals.attachment
+    page = tag.locals.page
+    attachment = tag.locals.attachment || page.attachment(name)
+    raise TagError, "attachment is not an image." unless attachment.content_type.strip =~ /^image\//
+    
+    attributes = tag.attr
+    attributes['name']    = name
+    attributes['size']    = 'normal'
+    attributes['title'] ||= CGI.escapeHTML(tag.render("attachment:title", {"name"=>name}))
+    attributes['rel']   ||= "lightbox"
+    attributes['class'] ||= "lightbox-link"
+    tag.render("attachment:link", attributes) do
+      tag.render("attachment:image", {'name' => name , 'size' => 'thumb', 'alt'=>attributes['title']})
+    end
   end
 
   private
