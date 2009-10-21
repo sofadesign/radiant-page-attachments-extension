@@ -174,7 +174,7 @@ module PageAttachmentTags
 
     *Usage*:
 
-    <pre><code><r:attachment:each [order="asc|desc"] [by="filename|size|created_at|..."] [limit=0] [offset=0] [extensions="png|pdf|doc"]>
+    <pre><code><r:attachment:each [order="asc|desc"] [by="filename|size|created_at|..."] [limit=0] [offset=0] [extensions="png|pdf|doc"] [name_prefix="prefix_"]>
         <r:link /> - <r:date>
     </r:attachment:each></code></pre>
   }
@@ -193,9 +193,10 @@ module PageAttachmentTags
     Renders the contained elements only if the current contextual page has one or
     more attachments. The @min_count@ attribute specifies the minimum number of required
     attachments. You can also filter by extensions with the @extensions@ attribute.
+    You can also filter by filenames with the @name_prefix@ attribute
 
     *Usage:*
-    <pre><code><r:if_attachments [min_count="n"] [extensions="doc|pdf"]>...</r:if_attachments></code></pre>
+    <pre><code><r:if_attachments [min_count="n"] [extensions="doc|pdf"] [name_prefix="prefix_"]>...</r:if_attachments></code></pre>
   }
   tag "if_attachments" do |tag|
     count = tag.attr['min_count'] && tag.attr['min_count'].to_i || 0
@@ -282,10 +283,19 @@ module PageAttachmentTags
 
       extensions = attr[:extensions] && attr[:extensions].split('|') || []
       conditions = unless extensions.blank?
-        [ extensions.map { |ext| "page_attachments.filename LIKE ?"}.join(' OR '),
+        [ "( " << extensions.map { |ext| "page_attachments.filename LIKE ?"}.join(' OR ') << " )",
           *extensions.map { |ext| "%.#{ext}" } ]
       else
         nil
+      end
+      
+      name = attr[:name_prefix] || ""
+      unless name.blank?
+        conditions ||= []
+        conditions[0] ||= ""
+        conditions[0] << " AND " unless extensions.blank?
+        conditions[0] << "page_attachments.filename LIKE ?"
+        conditions << "#{name}%"
       end
 
       by = attr[:by] || "position"
